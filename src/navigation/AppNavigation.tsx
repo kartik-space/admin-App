@@ -19,9 +19,10 @@ function HomeTabs() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        tabBarActiveTintColor: 'white',
-        tabBarInactiveTintColor: '#919191',
+        tabBarActiveTintColor: '#000',
+        tabBarInactiveTintColor: '#000',
         tabBarStyle: styles.tabBarStyle,
+        tabBarIndicatorStyle: { backgroundColor: 'black' }, // Style for the selected tab indicator
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
 
@@ -69,9 +70,9 @@ export default function AppNavigation() {
 
 const styles = StyleSheet.create({
   tabBarStyle: {
-    backgroundColor: '#1B2024',
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     height: 70,
     paddingBottom: 10,
     paddingTop: 10,
