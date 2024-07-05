@@ -11,49 +11,38 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
+import OrderItem from '../../../components/cards/OrderCard';
 
-const CategoryBox = ({ imageSource, backgroundColor, textColor, label }) => (
-  <TouchableOpacity style={styles.boxContainer}>
-    <View style={[styles.box, { backgroundColor }]}>
+const CategoryBox = ({
+  imageSource,
+  backgroundColor,
+  textColor,
+  label,
+  onPress,
+}) => (
+  <TouchableOpacity style={styles.boxContainer} onPress={onPress}>
+    <View style={[styles.box, {backgroundColor}]}>
       <Image
         source={imageSource}
         style={styles.boxImage}
         resizeMode="contain"
       />
     </View>
-    <Text style={[styles.boxLabel, { color: textColor }]}>{label}</Text>
+    <Text style={[styles.boxLabel, {color: textColor}]}>{label}</Text>
   </TouchableOpacity>
 );
 
-const DetailRow = ({ label, value }) => (
-  <View style={styles.detailRowContainer}>
-    <Text style={styles.detailLabel}>{label}</Text>
-    <Text style={styles.detailValue}>{value}</Text>
-  </View>
-);
-
-export const OrderItem = ({ backgroundColor, imageSource, from, to, time, payment, driver }) => (
-  <View style={[styles.orderItemContainer, { backgroundColor }]}>
-    <View style={styles.orderItemLeft}>
-      <DetailRow label="From :" value={from} />
-      <DetailRow label="To :" value={to} />
-      <DetailRow label="Time :" value={time} />
-      <DetailRow label="Payment :" value={payment} />
-      <DetailRow label="Driver :" value={driver} />
-    </View>
-    <View style={styles.orderItemImageContainer}>
-      <Image
-        source={imageSource}
-        style={styles.orderItemImage}
-        resizeMode="contain"
-      />
-    </View>
-  </View>
-);
-
-const Home = ({ navigation }: any) => {
+const Home = ({navigation}: any) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [newRate, setNewRate] = useState('');
+  const [selectedVehicle, setSelectedVehicle] = useState('');
+  const [vehicleRate, setVehicleRate] = useState('');
+  const [isCategoryModalVisible, setIsCategoryModalVisible] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [orderData, setOrderData] = useState({
+    totalOrders: 0,
+    pendingRequests: 0,
+  });
 
   const handleModalOpen = () => {
     setIsModalVisible(true);
@@ -66,6 +55,18 @@ const Home = ({ navigation }: any) => {
   const handleRateChange = () => {
     // Handle rate change logic here (e.g., update backend or local storage)
     setIsModalVisible(false); // Close the modal after rate change
+  };
+
+  const handleCategorySelect = category => {
+    // Fetch or compute the order data for the selected category
+    const data = {
+      totalOrders: 50, // Replace with actual data fetching logic
+      pendingRequests: 10, // Replace with actual data fetching logic
+    };
+
+    setSelectedCategory(category);
+    setOrderData(data);
+    setIsCategoryModalVisible(true);
   };
 
   return (
@@ -89,26 +90,31 @@ const Home = ({ navigation }: any) => {
             backgroundColor="#bcf5f9"
             textColor="#017FD2"
             label="Cabs"
+            onPress={() => handleCategorySelect('Cabs')}
           />
           <CategoryBox
             imageSource={require('../../../assets/images/ambulance.png')}
             backgroundColor="#FFE9EC"
             textColor="#EA7C8E"
             label="Ambulance"
+            onPress={() => handleCategorySelect('Ambulance')}
           />
           <CategoryBox
             imageSource={require('../../../assets/images/courier.png')}
             backgroundColor="#F5DDFB"
             textColor="#AA336A"
             label="Courier"
+            onPress={() => handleCategorySelect('Courier')}
           />
         </View>
 
         <View style={styles.rateContainer}>
           <View style={styles.rateTextContainer}>
             <Text style={styles.currRateText}>Your current rate is</Text>
-            <Text style={styles.rateAmount}>Rs. 19/km</Text>
-            <TouchableOpacity style={styles.changeRateButton} onPress={handleModalOpen}>
+            <Text style={styles.rateAmount}>Rs. 19/km for cabs</Text>
+            <TouchableOpacity
+              style={styles.changeRateButton}
+              onPress={handleModalOpen}>
               <Text style={styles.changeRateText}>Change Rate</Text>
             </TouchableOpacity>
           </View>
@@ -120,7 +126,7 @@ const Home = ({ navigation }: any) => {
           </View>
         </View>
 
-        <Text style={[styles.categoryText, { paddingTop: 20 }]}>
+        <Text style={[styles.categoryText, {paddingTop: 20}]}>
           Today's Orders
         </Text>
 
@@ -167,8 +173,7 @@ const Home = ({ navigation }: any) => {
             paddingTop: 10,
             flexDirection: 'row',
             justifyContent: 'flex-end',
-          }}
-        >
+          }}>
           <Text style={styles.ViewMore}>View In Detail</Text>
           <Image
             source={require('../../../assets/images/next_blue.png')}
@@ -185,8 +190,7 @@ const Home = ({ navigation }: any) => {
         visible={isModalVisible}
         animationType="slide"
         transparent={true}
-        onRequestClose={handleModalClose}
-      >
+        onRequestClose={handleModalClose}>
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
@@ -197,19 +201,118 @@ const Home = ({ navigation }: any) => {
                 onChangeText={text => setNewRate(text)}
                 keyboardType="numeric"
               />
+              <View style={styles.dropdown}>
+                <Text style={styles.dropdownLabel}>Select Vehicle:</Text>
+                <TouchableOpacity
+                  style={[
+                    styles.dropdownButton,
+                    selectedVehicle === 'Cab' && styles.selectedButton,
+                  ]}
+                  onPress={() => {
+                    setSelectedVehicle('Cab');
+                  }}>
+                  <Text
+                    style={[
+                      styles.dropdownText,
+                      selectedVehicle === 'Cab' && styles.selectedText,
+                    ]}>
+                    Cab
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.dropdownButton,
+                    selectedVehicle === 'Ambulance' && styles.selectedButton,
+                  ]}
+                  onPress={() => {
+                    setSelectedVehicle('Ambulance');
+                  }}>
+                  <Text
+                    style={[
+                      styles.dropdownText,
+                      selectedVehicle === 'Ambulance' && styles.selectedText,
+                    ]}>
+                    Ambulance
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.dropdownButton,
+                    selectedVehicle === 'Courier' && styles.selectedButton,
+                  ]}
+                  onPress={() => {
+                    setSelectedVehicle('Courier');
+                  }}>
+                  <Text
+                    style={[
+                      styles.dropdownText,
+                      selectedVehicle === 'Courier' && styles.selectedText,
+                    ]}>
+                    Courier
+                  </Text>
+                </TouchableOpacity>
+              </View>
               <View style={styles.modalButtons}>
                 <TouchableOpacity
                   style={[styles.modalButton, styles.cancelButton]}
-                  onPress={handleModalClose}
-                >
+                  onPress={handleModalClose}>
                   <Text style={styles.modalButtonText}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.modalButton, styles.saveButton]}
-                  onPress={handleRateChange}
-                >
+                  onPress={handleRateChange}>
                   <Text style={styles.modalButtonText}>Save</Text>
                 </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
+      {/* Modal for Category Details */}
+      <Modal
+        visible={isCategoryModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setIsCategoryModalVisible(false)}>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>{selectedCategory} Orders</Text>
+              <Text>Total Orders: {orderData.totalOrders}</Text>
+              <Text
+                style={{
+                  paddingBottom: 10,
+                }}>
+                Pending Requests: {orderData.pendingRequests}
+              </Text>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.saveButton]}
+                onPress={() => setIsCategoryModalVisible(false)}>
+                <Text style={styles.modalButtonText}>Close</Text>
+              </TouchableOpacity>
+              <View
+                style={{
+                  width: '100%',
+                  paddingTop: 15,
+                  flexDirection: 'row',
+                  justifyContent: 'flex-end',
+                  alignItems: 'center',
+                }}>
+                <Text
+                  style={{
+                    color: 'blue',
+                    fontSize: 15,
+                  }}>
+                  view in detail...
+                </Text>
+                <Image
+                  source={require('../../../assets/images/next_blue.png')}
+                  style={{
+                    height: 15,
+                    width: 15,
+                  }}
+                />
               </View>
             </View>
           </View>
@@ -218,6 +321,7 @@ const Home = ({ navigation }: any) => {
     </ScrollView>
   );
 };
+
 const styles = StyleSheet.create({
   scrollView: {
     backgroundColor: '#F9F8FD',
@@ -254,10 +358,10 @@ const styles = StyleSheet.create({
     color: '#000',
     fontSize: 20,
   },
-  ViewMore:{
+  ViewMore: {
     color: '#5A49CC',
     fontSize: 17,
-    fontWeight:'600'
+    fontWeight: '600',
   },
   categoriesContainer: {
     flexDirection: 'row',
@@ -329,39 +433,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
   },
-  orderItemContainer: {
-    backgroundColor: '#bcf5f9',
-    height: 150,
-    borderRadius: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 15,
-  },
-  orderItemLeft: {
-    width: '70%',
-    paddingLeft: 20,
-  },
-  detailRowContainer :{
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 7,
-  },
-  detailLabel:{
-    color: '#000',
-    fontSize: 17,
-    fontWeight: '500',
-  },
-  detailValue:{
-    color: '#000',
-    fontSize: 14,
-  },
-  orderItemImageContainer:{
-    width: '30%',
-  },
-  orderItemImage: {
-    width: 90,
-    height: 80,
-  },
+
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -388,6 +460,23 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 20,
   },
+  dropdown: {
+    marginBottom: 20,
+    width: '100%',
+  },
+  dropdownLabel: {
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  dropdownButton: {
+    backgroundColor: '#f0f0f0',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  dropdownText: {
+    fontSize: 16,
+  },
   modalButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -408,6 +497,12 @@ const styles = StyleSheet.create({
   modalButtonText: {
     color: '#fff',
     fontWeight: 'bold',
+  },
+  selectedButton: {
+    backgroundColor: '#5A49CC',
+  },
+  selectedText: {
+    color: '#fff',
   },
 });
 
