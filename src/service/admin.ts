@@ -1,41 +1,78 @@
-// api.js
 import axios from 'axios';
+
 
 // Create an Axios instance
 const apiClient = axios.create({
-//   baseURL: '',
+  baseURL: 'https://agobackend.onrender.com/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// // Add a request interceptor to include the token in the headers
-// apiClient.interceptors.request.use(
-//   async config => {
-//     const token = await AsyncStorage.getItem('token'); // Assuming you're using AsyncStorage to store the token
-//     if (token) {
-//       config.headers.Authorization = `Bearer ${token}`;
-//     }
-//     return config;
-//   },
-//   error => {
-//     return Promise.reject(error);
-//   },
-// );
+export const getCabOrders = async () => {
+  try {
+    const response = await apiClient.get('/admin/cab-orders');
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      console.error('Error response from server:', error.response.data);
+    } else if (error.request) {
+      console.error('No response received:', error.request);
+    } else {
+      console.error('Error setting up the request:', error.message);
+    }
+    throw error; 
+  }
+};
 
-//basic examples
+export const HomeCardOrders = async () => {
+  try {
+    const response = await apiClient.get('/admin/');
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      console.error('Error response from server:', error.response.data);
+    } else if (error.request) {
+      console.error('No response received:', error.request);
+    } else {
+      console.error('Error setting up the request:', error.message);
+    }
+    throw error; 
+  }
+};
 
-// export const postData = async data => {
-//   const response = await apiClient.post('/data', data);
-//   return response.data;
-// };
+export const getAvailableDrivers = async () => {
+  try {
+    const response = await apiClient.get('/admin/drivers-available');
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      console.error('Error response from server:', error.response.data);
+    } else if (error.request) {
+      console.error('No response received:', error.request);
+    } else {
+      console.error('Error setting up the request:', error.message);
+    }
+    throw error;
+  }
+};
 
-// export const putData = async (id, data) => {
-//   const response = await apiClient.put(`/data/${id}`, data);
-//   return response.data;
-// };
+export const allotDriver = async (driverId: string, cabOrderId: string) => {
+  try {
+    const response = await apiClient.post('/admin/drivers-allot', {
+      driverId,
+      cabOrderId,
+    });
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      console.error('Error response from server:', error.response.data);
+    } else if (error.request) {
+      console.error('No response received:', error.request);
+    } else {
+      console.error('Error setting up the request:', error.message);
+    }
+    throw error;
+  }
+}
 
-// export const deleteData = async id => {
-//   const response = await apiClient.delete(`/data/${id}`);
-//   return response.data;
-// };

@@ -1,114 +1,226 @@
-import React, { useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Image,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import DriverSelectionModal from '../../../components/cards/DriverSelectionModal';
-import OrderItem from '../../../components/cards/OrderCard';
+import OrderCard from '../../../components/cards/OrderCard';
 import FilterTabs from '../../../components/filterTabs/FilterTabs';
-import { orders } from '../../../data/Data.js';
+import useCabOrders from '../../../hooks/useCabOrders';
+import { getAddressFromCoordinates } from '../../../utils/geocoding';
 
-// Import the orders array correctly
-
-
-const Orders = ({ navigation }) => {
-  const [selectedFilter, setSelectedFilter] = useState('All');
-  const [currentOrderId, setCurrentOrderId] = useState(null); // Store the current order id
-  const [modalVisible, setModalVisible] = useState(false);
-
-  const filters = [
-    { label: 'All' },
-    { label: 'Today' },
-    { label: 'Requested' },
-    { label: 'Upcoming' },
-    { label: 'Previous' },
-  ];
-
-  // Function to categorize orders
-  const categorizeOrders = () => {
-    const today = new Date();
-    const todayDate = today.toISOString().split('T')[0]; // Get today's date in 'YYYY-MM-DD' format
-    const upcomingOrders = [];
-    const todayOrders = [];
-    const requestedOrders = [];
-    const previousOrders = [];
-
-    orders.forEach(order => {
-      if (order.date === todayDate) {
-        todayOrders.push(order);
-      } else if (order.date > todayDate) {
-        upcomingOrders.push(order);
-      } else {
-        previousOrders.push(order);
-      }
-
-      if (order.driver === 'Requested') {
-        requestedOrders.push(order);
-      }
-    });
-
-    return { upcomingOrders, todayOrders, requestedOrders, previousOrders };
+interface Order {
+  _id: string;
+  start: {
+    latitude: number;
+    longitude: number;
   };
+  end: {
+    latitude: number;
+    longitude: number;
+  };
+  startAddress: string;
+  endAddress: string;
+  date: string;
+  time: string;
+  driver: string;
+  status: string;
+  user: {
+    name: string;
+    phoneNo: string;
+  };
+}
 
-  const { upcomingOrders, todayOrders, requestedOrders, previousOrders } = categorizeOrders();
+const Orders: React.FC<{navigation: any}> = ({navigation}) => {
+  // State variables
+  const [selectedFilter, setSelectedFilter] = useState<string>('All');
+  const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const {cabOrders, isLoading, error, refetch} = useCabOrders();
+  const [ordersWithAddresses, setOrdersWithAddresses] = useState<Order[]>([]);
+  const [originalOrders, setOriginalOrders] = useState<Order[]>([]);
+  const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null); // State for selected driver ID
 
-  const filterOrders = (filter) => {
-    switch (filter) {
-      case 'Today':
-        return todayOrders;
-      case 'Requested':
-        return requestedOrders;
-      case 'Upcoming':
-        return upcomingOrders;
-      case 'Previous':
-        return previousOrders;
-      case 'All':
-      default:
-        return orders;
+  // Effects
+  useEffect(() => {
+    if (cabOrders) {
+      fetchAddresses();
+    }
+  }, [cabOrders]);
+
+  useEffect(() => {
+    filterOrders(selectedFilter);
+  }, [ordersWithAddresses, selectedFilter]);
+
+  useEffect(() => {
+    if (selectedDriverId) {
+      refetch();
+    }
+  }, [selectedDriverId, refetch]);
+
+  // Fetch addresses for orders
+  const fetchAddresses = async () => {
+    try {
+      const updatedOrders = await Promise.all(
+        cabOrders.map(async order => {
+          const startAddress = await getAddressFromCoordinates(
+            order.start.latitude,
+            order.start.longitude,
+          );
+          const endAddress = await getAddressFromCoordinates(
+            order.end.latitude,
+            order.end.longitude,
+          );
+          return {...order, startAddress, endAddress};
+        }),
+      );
+      setOrdersWithAddresses(updatedOrders);
+      setOriginalOrders(updatedOrders); // Store original orders separately
+    } catch (error) {
+      console.error('Error fetching addresses:', error);
+    } finally {
+      setRefreshing(false); // Ensure refreshing state is set to false after completion
     }
   };
 
-  const filteredOrders = filterOrders(selectedFilter);
+  // Helper function to parse date string in "DD/MM/YYYY" format
+  const parseDate = (dateString: string): Date => {
+    const [day, month, year] = dateString.split('/');
+    return new Date(Number(year), Number(month) - 1, Number(day));
+  };
 
-  const handleAllotDriver = (orderId) => {
+  // Filter orders based on selected filter
+  const filterOrders = (filter: string) => {
+    let filtered: Order[];
+    const today = new Date();
+    switch (filter) {
+      case 'Today':
+        filtered = originalOrders.filter(order => {
+          const orderDate = parseDate(order.date);
+          return orderDate.toDateString() === today.toDateString();
+        });
+        break;
+      case 'Requested':
+        filtered = originalOrders.filter(order => order.status === 'REQUESTED');
+        break;
+      case 'Upcoming':
+        filtered = originalOrders.filter(order => {
+          const orderDate = parseDate(order.date);
+          return orderDate > today;
+        });
+        break;
+      case 'Previous':
+        filtered = originalOrders.filter(order => {
+          const orderDate = parseDate(order.date);
+          return orderDate < today;
+        });
+        break;
+      default:
+        filtered = originalOrders;
+        break;
+    }
+    setFilteredOrders(filtered);
+  };
+
+  // Handle allotting a driver to an order
+  const handleAllotDriver = (orderId: string) => {
     setCurrentOrderId(orderId);
     setModalVisible(true);
   };
 
-  const handleSelectDriver = (driver) => {
-    console.log(`Driver ${driver} selected for order ${currentOrderId}`);
+  const handleSelectDriver = driver => {
+    setSelectedDriverId(driver._id);
     setModalVisible(false);
+    setCurrentOrderId(null);
   };
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  };
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    // Trigger data refetch
+    refetch()
+      .then(() => {
+        // Success
+        console.log('Data refetched successfully.');
+      })
+      .catch(error => {
+        // Error handling
+        console.error('Error refetching data:', error);
+      })
+      .finally(() => {
+        setRefreshing(false); // Ensure refreshing state is set to false after completion
+      });
+  }, [refetch]);
+
+  if (isLoading) {
+    return (
+      <View style={styles.activityIndicatorContainer}>
+        <ActivityIndicator size="large" color="#000" />
+      </View>
+    );
+  }
+
   return (
-    <ScrollView>
+    <ScrollView
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={['#0000ff']}
+          tintColor="#0000ff"
+        />
+      }>
       <View style={styles.header}>
         <Text style={styles.heading}>Cab Orders</Text>
         <Image source={require('../../../assets/images/orders_blue.png')} />
       </View>
 
       <FilterTabs
-        filters={filters}
+        filters={[
+          {label: 'All'},
+          {label: 'Today'},
+          {label: 'Requested'},
+          {label: 'Upcoming'},
+          {label: 'Previous'},
+        ]}
         selectedFilter={selectedFilter}
         onSelectFilter={setSelectedFilter}
       />
 
       <View style={styles.ordersContainer}>
-        {filteredOrders.length > 0 ? (
-          filteredOrders.map(order => (
-            <View key={order.id}>
-              <OrderItem
-                backgroundColor={order.backgroundColor}
-                imageSource={order.imageSource}
-                from={order.from}
-                to={order.to}
+        {error ? (
+          <Text>Error: {error.message}</Text>
+        ) : filteredOrders.length > 0 ? (
+          filteredOrders.map((order: Order) => (
+            <View key={order._id}>
+              <OrderCard
+                from={order.startAddress}
+                to={order.endAddress}
                 date={order.date}
                 time={order.time}
-                payment={order.payment}
-                driver={order.driver}
+                driver={order.driver ? order.driver.name : 'No Driver'} 
+                userName={order.user.name}
+                status={order.status}
+                phoneNo={order.user.phoneNo} // Ensure phone number is passed here
+                onPressAllotDriver={() => handleAllotDriver(order._id)}
               />
-              {order.driver === 'Requested' && (
+              {order.status === 'REQUESTED' && (
                 <TouchableOpacity
                   style={styles.allotDriverButton}
-                  onPress={() => handleAllotDriver(order.id)}
-                >
+                  onPress={() => handleAllotDriver(order._id)}>
                   <Text style={styles.allotDriverButtonText}>Allot Driver</Text>
                 </TouchableOpacity>
               )}
@@ -118,24 +230,29 @@ const Orders = ({ navigation }) => {
           <Text style={styles.noOrdersText}>No orders found.</Text>
         )}
       </View>
-
-      <DriverSelectionModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        onSelectDriver={handleSelectDriver}
-      />
+      {modalVisible && currentOrderId && (
+        <DriverSelectionModal
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          onSelectDriver={handleSelectDriver}
+          cabOrderId={currentOrderId}
+        />
+      )}
     </ScrollView>
   );
 };
 
-export default Orders;
-
 const styles = StyleSheet.create({
+  activityIndicatorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   header: {
+    height: 120,
     backgroundColor: '#000',
-    padding: 18,
     borderBottomRightRadius: 50,
-    height: 140,
+    padding: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -144,6 +261,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 25,
     fontWeight: '600',
+    marginRight: 10,
   },
   ordersContainer: {
     paddingHorizontal: 20,
@@ -159,11 +277,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
     paddingVertical: 10,
     paddingHorizontal: 15,
-    borderTopRightRadius:0,
-    borderTopLeftRadius:0,
-    borderRadius:10,
-    marginTop: 0,
-    top: -10,
+    borderTopRightRadius: 0,
+    borderTopLeftRadius: 0,
+    borderRadius: 10,
+    marginTop: -4,
   },
   allotDriverButtonText: {
     color: '#fff',
@@ -171,3 +288,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
+export default Orders;

@@ -9,10 +9,15 @@ import CabOrders from '../screen/tabs/CabOrders/Orders';
 import CourierOrders from '../screen/tabs/courier/Order';
 import Home from '../screen/tabs/home/Home';
 
+
 import ambulance from "../assets/images/ambulance_icon.png";
 import home from "../assets/images/home.png";
+import menu from "../assets/images/menu.png";
 import courier from "../assets/images/motorbike.png";
 import orders from "../assets/images/orders.png";
+import AllDrivers from '../screen/menu-screens/AllDrivers';
+import TotalOrders from '../screen/orders/TotalOrders';
+import More from '../screen/tabs/more/More';
 
 
 const Stack = createStackNavigator();
@@ -38,6 +43,11 @@ function HomeTabs() {
           } else if (route.name === 'Courier') {
             iconName = courier;
           }
+          else if (route.name === 'Menu') {
+            iconName = menu;
+          }
+
+          
 
           return (
             <Image
@@ -55,6 +65,7 @@ function HomeTabs() {
       <Tab.Screen name="Cab" component={CabOrders} options={{ headerShown: false }} />
       <Tab.Screen name="Ambulane" component={AmbulanceOrders} options={{ headerShown: false }} />
       <Tab.Screen name="Courier" component={CourierOrders} options={{ headerShown: false }} />
+      <Tab.Screen name="Menu" component={More} options={{ headerShown: false }} />
     </Tab.Navigator>
   );
 }
@@ -67,12 +78,15 @@ export default function AppNavigation() {
       }}
     >
       <Stack.Screen name="HomeTabs" component={HomeTabs} />
+      <Stack.Screen name="AllOrders" component={TotalOrders} />
+      <Stack.Screen name="AllDrivers" component={AllDrivers} />
     </Stack.Navigator>
   );
 }
 
 const styles = StyleSheet.create({
   tabBarStyle: {
+    fontFamily:'Poppins-Bold',
     backgroundColor: '#fff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
