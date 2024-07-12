@@ -29,7 +29,9 @@ interface Order {
   endAddress: string;
   date: string;
   time: string;
-  driver: string;
+  driver: {
+    name: string;
+  } | null;
   status: string;
   user: {
     name: string;
@@ -165,6 +167,13 @@ const Orders: React.FC<{navigation: any}> = ({navigation}) => {
       });
   }, [refetch]);
 
+  // Handle filter tab selection
+  const onSelectFilter = (filter: string) => {
+    setSelectedFilter(filter);
+    // Optionally, you can trigger refetch here if needed
+    // refetch();
+  };
+
   if (isLoading) {
     return (
       <View style={styles.activityIndicatorContainer}>
@@ -197,7 +206,7 @@ const Orders: React.FC<{navigation: any}> = ({navigation}) => {
           {label: 'Previous'},
         ]}
         selectedFilter={selectedFilter}
-        onSelectFilter={setSelectedFilter}
+        onSelectFilter={onSelectFilter}
       />
 
       <View style={styles.ordersContainer}>

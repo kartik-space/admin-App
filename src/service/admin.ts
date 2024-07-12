@@ -76,3 +76,19 @@ export const allotDriver = async (driverId: string, cabOrderId: string) => {
   }
 }
 
+export const getAllDrivers = async () => {
+  try {
+    const response = await apiClient.get('/admin/drivers');
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      console.error('Error response from server:', error.response.data);
+    } else if (error.request) {
+      console.error('No response received:', error.request);
+    } else {
+      console.error('Error setting up the request:', error.message);
+    }
+    throw error;
+  }
+};
+

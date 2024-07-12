@@ -1,14 +1,13 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import React from 'react';
-import { Image, StyleSheet } from 'react-native';
-
+import { Image, StyleSheet, View } from 'react-native';
 
 import AmbulanceOrders from '../screen/tabs/AmbulanceOrders/Request';
 import CabOrders from '../screen/tabs/CabOrders/Orders';
 import CourierOrders from '../screen/tabs/courier/Order';
 import Home from '../screen/tabs/home/Home';
-
+import More from '../screen/tabs/more/More';
 
 import ambulance from "../assets/images/ambulance_icon.png";
 import home from "../assets/images/home.png";
@@ -17,11 +16,23 @@ import courier from "../assets/images/motorbike.png";
 import orders from "../assets/images/orders.png";
 import AllDrivers from '../screen/menu-screens/AllDrivers';
 import TotalOrders from '../screen/orders/TotalOrders';
-import More from '../screen/tabs/more/More';
-
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
+
+function TabBarIcon({ focused, icon, size }) {
+  return (
+    <View style={[styles.tabIconContainer, focused && styles.tabIconContainerFocused]}>
+      <Image
+        source={icon}
+        style={[
+          styles.tabBarIconStyle,
+          { tintColor: focused ? 'white' : '#000', width: size, height: size },
+        ]}
+      />
+    </View>
+  );
+}
 
 function HomeTabs() {
   return (
@@ -30,40 +41,28 @@ function HomeTabs() {
         tabBarActiveTintColor: '#000',
         tabBarInactiveTintColor: '#000',
         tabBarStyle: styles.tabBarStyle,
-        tabBarIndicatorStyle: { backgroundColor: 'black' }, 
         tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
+          let icon;
 
           if (route.name === 'Home') {
-            iconName = home;
+            icon = home;
           } else if (route.name === 'Cab') {
-            iconName = orders;
-          } else if (route.name === 'Ambulane') {
-            iconName = ambulance;
+            icon = orders;
+          } else if (route.name === 'Ambulance') {
+            icon = ambulance;
           } else if (route.name === 'Courier') {
-            iconName = courier;
-          }
-          else if (route.name === 'Menu') {
-            iconName = menu;
+            icon = courier;
+          } else if (route.name === 'Menu') {
+            icon = menu;
           }
 
-          
-
-          return (
-            <Image
-              source={iconName}
-              style={[
-                styles.tabBarIconStyle,
-                { tintColor: color, width: size, height: size },
-              ]}
-            />
-          );
+          return <TabBarIcon focused={focused} icon={icon} size={size} />;
         },
       })}
     >
       <Tab.Screen name="Home" component={Home} options={{ headerShown: false }} />
       <Tab.Screen name="Cab" component={CabOrders} options={{ headerShown: false }} />
-      <Tab.Screen name="Ambulane" component={AmbulanceOrders} options={{ headerShown: false }} />
+      <Tab.Screen name="Ambulance" component={AmbulanceOrders} options={{ headerShown: false }} />
       <Tab.Screen name="Courier" component={CourierOrders} options={{ headerShown: false }} />
       <Tab.Screen name="Menu" component={More} options={{ headerShown: false }} />
     </Tab.Navigator>
@@ -86,7 +85,7 @@ export default function AppNavigation() {
 
 const styles = StyleSheet.create({
   tabBarStyle: {
-    fontFamily:'Poppins-Bold',
+    fontFamily: 'Poppins-Bold',
     backgroundColor: '#fff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
@@ -95,4 +94,15 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   tabBarIconStyle: {},
+  tabIconContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 35, // Adjust as needed
+    height: 35, // Adjust as needed
+    borderRadius: 25, // Half of width and height for circle
+    backgroundColor: 'transparent', // Initial background color
+  },
+  tabIconContainerFocused: {
+    backgroundColor: 'black', 
+  },
 });

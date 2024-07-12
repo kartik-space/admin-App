@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useAllotDriver } from '../../hooks/useAllotDriver';
 import useAvailableDrivers from '../../hooks/useAvailableDrivers';
 
@@ -10,21 +10,30 @@ const DriverSelectionModal = ({ visible, onClose, onSelectDriver, cabOrderId }) 
 
   const handleDriverSelection = (driver) => {
     setSelectedDriver(driver);
-    allotDriver({ driverId: driver._id, cabOrderId }, {
-      onSuccess: (response) => {
-        console.log('Driver alloted response:', response);
-        onSelectDriver(driver);
-      },
-      onError: (error) => {
-        console.error('Failed to allot driver:', error);
-      },
-    });
+  };
+
+  const handleAllotDriver = () => {
+    if (selectedDriver) {
+      allotDriver({ driverId: selectedDriver._id, cabOrderId }, {
+        onSuccess: (response) => {
+          console.log('Driver alloted response:', response);
+          onSelectDriver(selectedDriver);
+          onClose();
+        },
+        onError: (error) => {
+          console.error('Failed to allot driver:', error);
+        },
+      });
+    }
   };
 
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
+          <TouchableOpacity style={styles.closeIcon} onPress={onClose}>
+            <Image source={require('../../assets/images/cross.png')} style={styles.closeImage} />
+          </TouchableOpacity>
           <Text style={styles.modalTitle}>Select a Driver</Text>
           {isLoading ? (
             <ActivityIndicator size="large" color="#0000ff" />
@@ -52,8 +61,12 @@ const DriverSelectionModal = ({ visible, onClose, onSelectDriver, cabOrderId }) 
             ))
           )}
           {isAllotting && <ActivityIndicator size="small" color="#0000ff" />}
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeButtonText}>Close</Text>
+          <TouchableOpacity
+            style={styles.allotButton}
+            onPress={handleAllotDriver}
+            disabled={!selectedDriver || isAllotting}
+          >
+            <Text style={styles.allotButtonText}>Allot Driver</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -83,6 +96,15 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
+  closeIcon: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+  },
+  closeImage: {
+    width: 30,
+    height: 30,
+  },
   modalTitle: {
     fontSize: 22,
     fontWeight: 'bold',
@@ -109,8 +131,20 @@ const styles = StyleSheet.create({
   selectedDriverName: {
     color: '#fff',
   },
-  closeButton: {
+  allotButton: {
     marginTop: 20,
+    backgroundColor: '#000',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+  },
+  allotButtonText: {
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  closeButton: {
+    marginTop: 10,
     backgroundColor: '#000',
     paddingVertical: 12,
     paddingHorizontal: 20,
