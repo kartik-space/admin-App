@@ -6,14 +6,14 @@ import {
   View
 } from 'react-native';
 
-const DetailRow = ({ label, value }) => (
+const DetailRow = ({ label, value }: any) => (
     <View style={styles.detailRowContainer}>
       <Text style={styles.detailLabel}>{label}</Text>
       <Text style={styles.detailValue}>{value}</Text>
     </View>
   );
 
-  const OrderItem = ({ from, to, date, time, phoneNo, driver, userName, status, onPressAllotDriver }) => (
+  const OrderItem = ({ from, to, date, time, phoneNo, driver, userName, status, onPressAllotDriver }: any) => (
     <View style={styles.orderItemContainer}>
       <View style={styles.orderItemLeft}>
         <DetailRow label="From" value={from} />

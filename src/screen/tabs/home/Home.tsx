@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import DriverSelectionModal from '../../../components/cards/DriverSelectionModal';
 import OrderCard from '../../../components/cards/OrderCard';
+import CategoryDetailsModal from '../../../components/modals/CategoryDetailsModal';
+import RateChangeModal from '../../../components/modals/RateChangeModal';
 import useHomeCardOrders from '../../../hooks/useHomeCardOrders';
 import { getAddressFromCoordinates } from '../../../utils/geocoding';
 
@@ -47,6 +49,7 @@ const Home: React.FC<{navigation: any}> = ({navigation}) => {
   const [isCategoryModalVisible, setIsCategoryModalVisible] = useState(false);
   const [filteredOrders, setFilteredOrders] = useState<any[]>([]);
   const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
+  const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null); // State for selected driver ID
   const [modalVisible, setModalVisible] = useState(false);
   const [orderData, setOrderData] = useState({
     totalOrders: 0,
@@ -86,6 +89,12 @@ const Home: React.FC<{navigation: any}> = ({navigation}) => {
     }
   }, [homeCardOrders]);
 
+  useEffect(() => {
+    if (selectedDriverId) {
+      refetch();
+    }
+  }, [selectedDriverId, refetch]);
+
   // Handlers for modals
   const handleRateModalOpen = () => {
     setIsRateModalVisible(true);
@@ -95,9 +104,9 @@ const Home: React.FC<{navigation: any}> = ({navigation}) => {
     setIsRateModalVisible(false);
   };
 
-  const handleRateChange = (newRate: number) => {
+  const handleRateChange = (newRate: number, vehicleCategory: string) => {
     // Implement rate change logic here
-    console.log('New rate:', newRate);
+    console.log('New rate:', newRate, 'for vehicle category:', vehicleCategory);
     // Close the modal
     handleRateModalClose();
   };
@@ -115,10 +124,10 @@ const Home: React.FC<{navigation: any}> = ({navigation}) => {
     setModalVisible(true);
   };
 
-  const handleSelectDriver = (driver: string) => {
-    console.log(`Driver ${driver} selected for order ${currentOrderId}`);
+  const handleSelectDriver = driver => {
+    setSelectedDriverId(driver._id);
     setModalVisible(false);
-    // Implement logic to assign driver to order
+    setCurrentOrderId(null);
   };
 
   const handleViewDetail = () => {
@@ -251,10 +260,10 @@ const Home: React.FC<{navigation: any}> = ({navigation}) => {
                     to={order.endAddress}
                     date={order.date}
                     time={order.time}
-                    driver={order.driver.name}
-                    userName={order.user.name}
+                    driver={order.driver? order.driver.name : 'No Driver' }
+                    userName={order.user?.name}
                     status={order.status}
-                    phoneNo={order.user.phoneNo} 
+                    phoneNo={order.user?.phoneNo || 'Unknown Phone'}
                     onPressAllotDriver={() => handleAllotDriver(order._id)}
                   />
                   {order.status === 'REQUESTED' && (
@@ -296,10 +305,27 @@ const Home: React.FC<{navigation: any}> = ({navigation}) => {
       </SafeAreaView>
 
       {/* Modals */}
-      <DriverSelectionModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        onSelectDriver={handleSelectDriver}
+      {modalVisible && currentOrderId && (
+        <DriverSelectionModal
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          onSelectDriver={handleSelectDriver}
+          cabOrderId={currentOrderId}
+        />
+      )}
+
+      <CategoryDetailsModal
+        isVisible={isCategoryModalVisible}
+        onClose={handleCategoryModalClose}
+        category={selectedCategory}
+        orderData={orderData}
+        onViewDetail={handleViewDetail}
+      />
+
+      <RateChangeModal
+        isVisible={isRateModalVisible}
+        onClose={handleRateModalClose}
+        onRateChange={handleRateChange}
       />
     </ScrollView>
   );

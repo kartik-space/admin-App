@@ -1,7 +1,7 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-const FilterTabs = ({ filters, selectedFilter, onSelectFilter }) => {
+const FilterTabs = ({ filters, selectedFilter, onSelectFilter } : any) => {
   return (
     <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
       <View style={styles.filterContainer}>

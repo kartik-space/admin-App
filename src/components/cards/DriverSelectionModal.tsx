@@ -1,29 +1,57 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Image,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
 import { useAllotDriver } from '../../hooks/useAllotDriver';
 import useAvailableDrivers from '../../hooks/useAvailableDrivers';
 
-const DriverSelectionModal = ({ visible, onClose, onSelectDriver, cabOrderId }) => {
-  const { availableDrivers, isLoading, error } = useAvailableDrivers();
-  const { mutate: allotDriver, isLoading: isAllotting } = useAllotDriver();
-  const [selectedDriver, setSelectedDriver] = useState(null);
+interface Driver {
+  _id: string;
+  name: string;
+}
 
-  const handleDriverSelection = (driver) => {
+interface DriverSelectionModalProps {
+  visible: boolean;
+  onClose: () => void;
+  onSelectDriver: (driver: Driver) => void;
+  cabOrderId: string;
+}
+
+const DriverSelectionModal: React.FC<DriverSelectionModalProps> = ({
+  visible,
+  onClose,
+  onSelectDriver,
+  cabOrderId
+}) => {
+  const { availableDrivers, isLoading, error } = useAvailableDrivers();
+  const { mutate: allotDriver, status: allotStatus } = useAllotDriver();
+  const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
+
+  const handleDriverSelection = (driver: Driver) => {
     setSelectedDriver(driver);
   };
 
   const handleAllotDriver = () => {
     if (selectedDriver) {
-      allotDriver({ driverId: selectedDriver._id, cabOrderId }, {
-        onSuccess: (response) => {
-          console.log('Driver alloted response:', response);
-          onSelectDriver(selectedDriver);
-          onClose();
-        },
-        onError: (error) => {
-          console.error('Failed to allot driver:', error);
-        },
-      });
+      allotDriver(
+        { driverId: selectedDriver._id, cabOrderId },
+        {
+          onSuccess: (response) => {
+            console.log('Driver alloted response:', response);
+            onSelectDriver(selectedDriver);
+            onClose();
+          },
+          onError: (error) => {
+            console.error('Failed to allot driver:', error);
+          }
+        }
+      );
     }
   };
 
@@ -32,7 +60,10 @@ const DriverSelectionModal = ({ visible, onClose, onSelectDriver, cabOrderId }) 
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
           <TouchableOpacity style={styles.closeIcon} onPress={onClose}>
-            <Image source={require('../../assets/images/cross.png')} style={styles.closeImage} />
+            <Image
+              source={require('../../assets/images/cross.png')}
+              style={styles.closeImage}
+            />
           </TouchableOpacity>
           <Text style={styles.modalTitle}>Select a Driver</Text>
           {isLoading ? (
@@ -45,14 +76,14 @@ const DriverSelectionModal = ({ visible, onClose, onSelectDriver, cabOrderId }) 
                 key={driver._id}
                 style={[
                   styles.driverButton,
-                  selectedDriver === driver && styles.selectedDriverButton,
+                  selectedDriver === driver && styles.selectedDriverButton
                 ]}
                 onPress={() => handleDriverSelection(driver)}
               >
                 <Text
                   style={[
                     styles.driverName,
-                    selectedDriver === driver && styles.selectedDriverName,
+                    selectedDriver === driver && styles.selectedDriverName
                   ]}
                 >
                   {driver.name}
@@ -60,11 +91,13 @@ const DriverSelectionModal = ({ visible, onClose, onSelectDriver, cabOrderId }) 
               </TouchableOpacity>
             ))
           )}
-          {isAllotting && <ActivityIndicator size="small" color="#0000ff" />}
+          {allotStatus === 'loading' && (
+            <ActivityIndicator size="small" color="#0000ff" />
+          )}
           <TouchableOpacity
             style={styles.allotButton}
             onPress={handleAllotDriver}
-            disabled={!selectedDriver || isAllotting}
+            disabled={!selectedDriver || allotStatus === 'loading'}
           >
             <Text style={styles.allotButtonText}>Allot Driver</Text>
           </TouchableOpacity>
@@ -79,7 +112,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)'
   },
   modalContent: {
     width: 300,
@@ -90,26 +123,26 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 2
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    elevation: 5,
+    elevation: 5
   },
   closeIcon: {
     position: 'absolute',
     top: 10,
-    right: 10,
+    right: 10
   },
   closeImage: {
     width: 30,
-    height: 30,
+    height: 30
   },
   modalTitle: {
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 20,
-    color: '#333',
+    color: '#333'
   },
   driverButton: {
     width: '100%',
@@ -119,46 +152,46 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#ddd'
   },
   selectedDriverButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#4CAF50'
   },
   driverName: {
     fontSize: 18,
-    color: '#333',
+    color: '#333'
   },
   selectedDriverName: {
-    color: '#fff',
+    color: '#fff'
   },
   allotButton: {
     marginTop: 20,
     backgroundColor: '#000',
     paddingVertical: 12,
     paddingHorizontal: 20,
-    borderRadius: 5,
+    borderRadius: 5
   },
   allotButtonText: {
     fontSize: 16,
     color: '#fff',
-    fontWeight: 'bold',
+    fontWeight: 'bold'
   },
   closeButton: {
     marginTop: 10,
     backgroundColor: '#000',
     paddingVertical: 12,
     paddingHorizontal: 20,
-    borderRadius: 5,
+    borderRadius: 5
   },
   closeButtonText: {
     fontSize: 16,
     color: '#fff',
-    fontWeight: 'bold',
+    fontWeight: 'bold'
   },
   errorText: {
     color: 'red',
-    fontSize: 16,
-  },
+    fontSize: 16
+  }
 });
 
 export default DriverSelectionModal;

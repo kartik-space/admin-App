@@ -3,7 +3,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import React from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 
-import AmbulanceOrders from '../screen/tabs/AmbulanceOrders/Request';
+import AmbulanceOrders from '../screen/tabs/AmbulanceOrders/Orders';
 import CabOrders from '../screen/tabs/CabOrders/Orders';
 import CourierOrders from '../screen/tabs/courier/Order';
 import Home from '../screen/tabs/home/Home';
@@ -20,7 +20,7 @@ import TotalOrders from '../screen/orders/TotalOrders';
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-function TabBarIcon({ focused, icon, size }) {
+function TabBarIcon({ focused, icon, size } :any) {
   return (
     <View style={[styles.tabIconContainer, focused && styles.tabIconContainerFocused]}>
       <Image

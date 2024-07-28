@@ -16,15 +16,15 @@ const RateChangeModal = ({ isVisible, onClose, onRateChange }: any) => {
   const [showVehicleOptions, setShowVehicleOptions] = useState(false);
 
   const handleRateChange = () => {
-    onRateChange(newRate, selectedVehicle); // Call the parent component's function to handle rate change
-    onClose(); // Close the modal after rate change
+    onRateChange(newRate, selectedVehicle); 
+    onClose(); 
   };
 
   const toggleVehicleOptions = () => {
     setShowVehicleOptions(!showVehicleOptions);
   };
 
-  const selectVehicle = (vehicle) => {
+  const selectVehicle = (vehicle : any) => {
     setSelectedVehicle(vehicle);
     toggleVehicleOptions();
   };
